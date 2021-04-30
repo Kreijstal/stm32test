@@ -146,7 +146,7 @@ int main(void)
   while (1)
   {
 	  //printf("huart2.RxXferSize=%u\r\n",huart2.RxXferSize);
-	  printf("hello wolrd");
+	 // printf("hello wolrd");
       if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13)!=GPIO_PIN_SET){
     	  printf("button is pressed \r\n");
     	  printf("rust number:%u",test());
