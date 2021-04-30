@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "string.h"
+#include "../../header.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +43,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
 
@@ -50,6 +52,7 @@ UART_HandleTypeDef huart2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -79,6 +82,21 @@ PUTCHAR_PROTOTYPE
 	//HAL_UART_Transmit_IT(&huart2, (uint8_t *)&ch, 1);
   return ch;
 }
+
+/*bool getchar(uint8_t * ch)
+{
+       // check for overflow and clear
+	if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_ORE))
+		__HAL_UART_CLEAR_FLAG(&huart1, UART_FLAG_ORE);
+
+	if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE))
+	{
+		*ch = huart1.Instance->RDR & 0x1FF;
+		return true;
+	}
+
+	return false;
+}*/
 
 void printhexlikeshellcode(uint l,unsigned char* thing){
 	for(uint i=0;i<l;i++){
@@ -116,10 +134,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_StatusTypeDef x;
-  //HAL_UART_Receive_IT(&huart2, (uint8_t *)funBuffer, 1);
+  HAL_UART_Receive_DMA(&huart2, (uint8_t *)funBuffer, 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,15 +146,16 @@ int main(void)
   while (1)
   {
 	  //printf("huart2.RxXferSize=%u\r\n",huart2.RxXferSize);
-	  //printf("hello wolrd");
+	  printf("hello wolrd");
       if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13)!=GPIO_PIN_SET){
     	  printf("button is pressed \r\n");
+    	  printf("rust number:%u",test());
       }
 	  huart2.pRxBuffPtr  = funBuffer;
 	  //printf("length of char %d",sizeof(char));
 	  //printhexlikeshellcode(10,funBuffer);
 	  printf("%s",funBuffer);
-	  memset(funBuffer, 0, sizeof(funBuffer));
+	  //memset(funBuffer, 0, sizeof(funBuffer));
 	  //HAL_UART_Transmit(&huart2, '\n', 1,0xFFFF);
 	 // for(uint i=0;i<2;i++)
 	  //printf("%c",huart2.Instance->RDR);
@@ -189,6 +209,7 @@ int main(void)
 	  memset(UART2_rxBuffer, 0, sizeof(UART2_rxBuffer));
 	  HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5);*/
 	  HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5);
+	  //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_5);
 	  HAL_Delay(1000);
 
 
@@ -289,6 +310,22 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -304,7 +341,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -312,12 +349,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pin : LED_2_Pin */
+  GPIO_InitStruct.Pin = LED_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(LED_2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB8 PB9 */
   GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;

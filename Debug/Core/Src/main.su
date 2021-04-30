@@ -1,0 +1,9 @@
+main.c:77:1:__io_putchar	16	static
+main.c:101:6:printhexlikeshellcode	24	static
+main.c:113:5:main	8	static
+main.c:227:6:SystemClock_Config	232	static
+main.c:282:13:MX_USART2_UART_Init	8	static
+main.c:315:13:MX_DMA_Init	16	static
+main.c:333:13:MX_GPIO_Init	48	static
+main.c:375:6:HAL_UART_RxCpltCallback	16	static
+main.c:395:6:Error_Handler	8	static,ignoring_inline_asm
