@@ -104,6 +104,7 @@ void printhexlikeshellcode(uint l,unsigned char* thing){
 		//putchar(thing[i]);
 	}
 }
+uint funBufferIndex=0;
 /* USER CODE END 0 */
 
 /**
@@ -138,7 +139,18 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_StatusTypeDef x;
-  HAL_UART_Receive_DMA(&huart2, (uint8_t *)funBuffer, 1000);
+  HAL_UART_Receive_DMA(&huart2, (uint8_t *)funBuffer, 4);
+  uint buttonPressed1Counter=0;
+  uint buttonPressed2Counter=0;
+  HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5);
+  uint button1pressed=0;
+  uint button1pressednext=0;
+  uint button2pressed=0;
+  uint button2pressednext=0;
+  printf("program start\r\n");
+  char prevchar=0;
+  char thechar=0;
+  uint dings=0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,15 +158,78 @@ int main(void)
   while (1)
   {
 	  //printf("huart2.RxXferSize=%u\r\n",huart2.RxXferSize);
-	 // printf("hello wolrd");
-      if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13)!=GPIO_PIN_SET){
-    	  printf("button is pressed \r\n");
-    	  printf("rust number:%u",test());
-      }
+	  printf("hello wolrd\r\n");
+	  button1pressednext=0;
+	  if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13)!=GPIO_PIN_SET){
+		  button1pressednext=1;
+	      if(button1pressed==0){
+	      	  printf("button is pressed times: %u \r\n",++buttonPressed1Counter);
+	      	HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5);
+	      }
+	      // printf("rust number:%u",test());
+	  }/*
+	  button2pressednext=0;
+	  if(HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_10)!=GPIO_PIN_RESET){
+	  	button2pressednext=1;
+	    if(button2pressed==0)
+	      		printf("button2 is pressed times: %u \r\n",++buttonPressed2Counter);
+	  }
+
+	  button2pressednext=button2pressednext;*/
+	  button1pressed=button1pressednext;
 	  huart2.pRxBuffPtr  = funBuffer;
+	  /*while(funBuffer[funBufferIndex]){
+		  //Do something with the character
+		  //dings=0;
+		  dings++;
+		  /*if(funBuffer[funBufferIndex]<='9'&&funBuffer[funBufferIndex]>='0'){
+			  dings=funBuffer[funBufferIndex]-'0';
+		  }else if(funBuffer[funBufferIndex]<='z'&&funBuffer[funBufferIndex]>='a'){
+			  dings=funBuffer[funBufferIndex]-'a'+10;
+
+		  }
+		  printf("digit:%u\r\n",dings);
+		  HAL_GPIO_WritePin(GPIOA,LED_2_Pin,(dings)&1);
+		  HAL_GPIO_WritePin(GPIOA,bled2_Pin,((dings)>>1)&1);
+		  HAL_GPIO_WritePin(GPIOA,bled3_Pin,((dings)>>2)&1);
+		  HAL_GPIO_WritePin(GPIOB,bled4_Pin,((dings)>>3)&1);
+		  HAL_GPIO_WritePin(bled5_GPIO_Port,bled5_Pin,((dings)>>4)&1);
+		  HAL_GPIO_WritePin(GPIOA,bled6_Pin,((dings)>>5)&1);
+		  HAL_GPIO_WritePin(GPIOA,bled7_Pin,((dings)>>6)&1);
+		  HAL_GPIO_WritePin(GPIOB,bled8_Pin,((dings)>>7)&1);
+		  HAL_GPIO_WritePin(GPIOB,bled9_Pin,((dings)>>8)&1);
+		  funBufferIndex++;
+	  }*/
+	  while(funBuffer[funBufferIndex]){
+		  dings=0;
+
+		  if(funBuffer[funBufferIndex]<='9'&&funBuffer[funBufferIndex]>='0'){
+		  			  dings=funBuffer[funBufferIndex]-'0';
+		  }else if(funBuffer[funBufferIndex]<='z'&&funBuffer[funBufferIndex]>='a'){
+			  dings=funBuffer[funBufferIndex]-'a'+10;
+		  }
+		  if(prevchar){
+			  thechar|=dings;
+			  printf("thechar:%u",thechar);
+			  dings=thechar;
+			  HAL_GPIO_WritePin(GPIOA,LED_2_Pin,(dings)&1);
+			  HAL_GPIO_WritePin(GPIOA,bled2_Pin,((dings)>>1)&1);
+			  HAL_GPIO_WritePin(GPIOA,bled3_Pin,((dings)>>2)&1);
+			  HAL_GPIO_WritePin(GPIOB,bled4_Pin,((dings)>>3)&1);
+			  HAL_GPIO_WritePin(bled5_GPIO_Port,bled5_Pin,((dings)>>4)&1);
+			  HAL_GPIO_WritePin(GPIOA,bled6_Pin,((dings)>>5)&1);
+			  HAL_GPIO_WritePin(GPIOA,bled7_Pin,((dings)>>6)&1);
+			  HAL_GPIO_WritePin(GPIOB,bled8_Pin,((dings)>>7)&1);
+			  HAL_GPIO_WritePin(GPIOB,bled9_Pin,((dings)>>8)&1);
+		  }else{
+			  thechar=dings<<4;
+		  }
+		  prevchar=!prevchar;
+
+	  }
 	  //printf("length of char %d",sizeof(char));
 	  //printhexlikeshellcode(10,funBuffer);
-	  printf("%s",funBuffer);
+	  //printf("buff:%s\r\n",funBuffer);
 	  //memset(funBuffer, 0, sizeof(funBuffer));
 	  //HAL_UART_Transmit(&huart2, '\n', 1,0xFFFF);
 	 // for(uint i=0;i<2;i++)
@@ -208,9 +283,9 @@ int main(void)
 	  HAL_UART_Transmit(&huart2, funBuffer, 255, 100);
 	  memset(UART2_rxBuffer, 0, sizeof(UART2_rxBuffer));
 	  HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5);*/
-	  HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5);
+	 // HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5);
 	  //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_5);
-	  HAL_Delay(1000);
+	  //HAL_Delay(1000);
 
 
     /* USER CODE END WHILE */
@@ -341,7 +416,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_2_Pin|bled2_Pin|bled3_Pin|bled7_Pin
+                          |bled6_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, bled8_Pin|bled9_Pin|bled4_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(bled5_GPIO_Port, bled5_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -349,12 +431,34 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LED_2_Pin */
-  GPIO_InitStruct.Pin = LED_2_Pin;
+  /*Configure GPIO pins : LED_2_Pin bled2_Pin bled3_Pin bled7_Pin
+                           bled6_Pin */
+  GPIO_InitStruct.Pin = LED_2_Pin|bled2_Pin|bled3_Pin|bled7_Pin
+                          |bled6_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED_2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : bled8_Pin bled9_Pin bled4_Pin */
+  GPIO_InitStruct.Pin = bled8_Pin|bled9_Pin|bled4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : bled5_Pin */
+  GPIO_InitStruct.Pin = bled5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(bled5_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA10 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB8 PB9 */
   GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
@@ -380,10 +484,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   /* NOTE : This function should not be modified, when the callback is needed,
             the HAL_UART_RxCpltCallback can be implemented in the user file
    */
-    //printf("Data has been uploaded!\r\n");
+
+    printf("recovered character:%c\r\n",funBuffer[funBufferIndex]);
+    printf("Data has been uploaded!\r\n");
+    funBufferIndex=0;
+    memset(funBuffer, 0, sizeof(funBuffer));
+    HAL_UART_Receive_DMA(&huart2, (uint8_t *)funBuffer, 1000);
+
     HAL_UART_Transmit_IT(&huart2, (uint8_t *)funBuffer, 1);
    // printf("I've been interrupted\r\n");
-    HAL_UART_Receive_IT(&huart2, (uint8_t *)funBuffer, 1);
+    //HAL_UART_Receive_IT(&huart2, (uint8_t *)funBuffer, 1);
     //memset(funBuffer, 0, sizeof(funBuffer));
 }
 /* USER CODE END 4 */
