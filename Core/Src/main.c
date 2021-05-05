@@ -98,13 +98,13 @@ PUTCHAR_PROTOTYPE
 	return false;
 }*/
 
-void printhexlikeshellcode(uint l,unsigned char* thing){
-	for(uint i=0;i<l;i++){
+void printhexlikeshellcode(size_t l,unsigned char* thing){
+	for(size_t i=0;i<l;i++){
 		printf("\\x%x",thing[i]);
 		//putchar(thing[i]);
 	}
 }
-uint funBufferIndex=0;
+size_t funBufferIndex=0;
 /* USER CODE END 0 */
 
 /**
@@ -149,7 +149,7 @@ int main(void)
   uint button2pressednext=0;
   printf("program start\r\n");
   char prevchar=0;
-  char thechar=0;
+  uint thechar=0;
   uint dings=0;
   /* USER CODE END 2 */
 
@@ -158,7 +158,7 @@ int main(void)
   while (1)
   {
 	  //printf("huart2.RxXferSize=%u\r\n",huart2.RxXferSize);
-	  printf("hello wolrd\r\n");
+	  //printf("hello wolrd\r\n");
 	  button1pressednext=0;
 	  if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13)!=GPIO_PIN_SET){
 		  button1pressednext=1;
@@ -177,7 +177,7 @@ int main(void)
 
 	  button2pressednext=button2pressednext;*/
 	  button1pressed=button1pressednext;
-	  huart2.pRxBuffPtr  = funBuffer;
+	  //huart2.pRxBuffPtr  = funBuffer;
 	  /*while(funBuffer[funBufferIndex]){
 		  //Do something with the character
 		  //dings=0;
@@ -201,6 +201,7 @@ int main(void)
 		  funBufferIndex++;
 	  }*/
 	  while(funBuffer[funBufferIndex]){
+		  //printf("pressed, funBufferIndex:%u\r\n",funBufferIndex);
 		  dings=0;
 
 		  if(funBuffer[funBufferIndex]<='9'&&funBuffer[funBufferIndex]>='0'){
@@ -210,7 +211,7 @@ int main(void)
 		  }
 		  if(prevchar){
 			  thechar|=dings;
-			  printf("thechar:%u",thechar);
+			  printf("thechar:%u\r\n",thechar);
 			  dings=thechar;
 			  HAL_GPIO_WritePin(GPIOA,LED_2_Pin,(dings)&1);
 			  HAL_GPIO_WritePin(GPIOA,bled2_Pin,((dings)>>1)&1);
@@ -225,7 +226,7 @@ int main(void)
 			  thechar=dings<<4;
 		  }
 		  prevchar=!prevchar;
-
+		  funBufferIndex++;
 	  }
 	  //printf("length of char %d",sizeof(char));
 	  //printhexlikeshellcode(10,funBuffer);
@@ -245,15 +246,17 @@ int main(void)
 	  //printf("\r\n");
 	  fflush(stdout);
 	  //printf("huart2.RxXferCount=%u\r\n",huart2.RxXferCount);
-	  huart2.RxXferCount=1000;
+	  //huart2.RxXferCount=1000;
 	  //huart2.Instance->TDR='d';
 	  if (huart2.Instance->ISR>>3&1||huart2.Instance->CR1==13){
 		  printf("I can't receive data anymore\r\n");
-		  //printf("huart2.instance->ISR=%u\r\n",huart2.Instance->ISR);
+		//  printf("huart2.instance->ISR=%u\r\n",huart2.Instance->ISR);
+		  printf("huart2.instance->RDR=%c\r\n",huart2.Instance->RDR);
 		  //attempt to fix
 		 // huart2.Instance->ISR&=(~(1<<3));
 		 // huart2.Instance->CR1=301;
-		  HAL_UART_Receive_IT(&huart2, (uint8_t *)funBuffer, 100);
+		 huart2.RxState = HAL_UART_STATE_READY;
+		 printf("HAL REPLY:%u\r\n",HAL_UART_Receive_DMA(&huart2, (uint8_t *)funBuffer, 10));
 	  }//else{*/
 	  //printf("huart2.RxXferSize=%u\r\n",huart2.RxXferSize);
 	  //printf("huart2.instance->RDR=%c\r\n",huart2.Instance->RDR);
@@ -484,14 +487,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   /* NOTE : This function should not be modified, when the callback is needed,
             the HAL_UART_RxCpltCallback can be implemented in the user file
    */
-
-    printf("recovered character:%c\r\n",funBuffer[funBufferIndex]);
-    printf("Data has been uploaded!\r\n");
+    char recover=funBuffer[funBufferIndex];
+    //printf("recovered character:%c\r\n",funBuffer[funBufferIndex]);
+    //printf("Data has been uploaded!\r\n");
     funBufferIndex=0;
     memset(funBuffer, 0, sizeof(funBuffer));
-    HAL_UART_Receive_DMA(&huart2, (uint8_t *)funBuffer, 1000);
+    funBuffer[0]=recover;
+    //funBuffer[1]=recover;
+    HAL_UART_Receive_DMA(&huart2, (uint8_t *)(funBuffer+1), 999);
 
-    HAL_UART_Transmit_IT(&huart2, (uint8_t *)funBuffer, 1);
+   // HAL_UART_Transmit_IT(&huart2, (uint8_t *)funBuffer, 1);
    // printf("I've been interrupted\r\n");
     //HAL_UART_Receive_IT(&huart2, (uint8_t *)funBuffer, 1);
     //memset(funBuffer, 0, sizeof(funBuffer));
